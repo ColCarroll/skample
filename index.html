@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>skample</title>
+	<link rel="stylesheet" href="static/styles.css">
+	<link rel="stylesheet" type="text/css" href="static/semantic/dist/semantic.min.css">
+	<style type="text/css">
+		#drawing {
+          background: oldlace;
+        }
+		.bar rect {
+		  fill: steelblue;
+		}
+        .line {
+          fill: none;
+          stroke: #000;
+          stroke-width: 5px;
+          stroke-linejoin: round;
+          stroke-linecap: round;
+        }
+		.bar text {
+		  fill: #fff;
+		  font: 10px sans-serif;
+		}
+
+		body {
+			background-color: #FFFFFF;
+		}
+		.ui.menu .item img.logo {
+			margin-right: 1.5em;
+		}
+		.main.container {
+			margin-top: 12em;
+		}
+	</style>
+</head>
+
+<body>
+  <div class="ui fixed inverted menu">
+    <div class="ui container">
+      <a href="#" class="header item">
+        <img class="logo" src="static/assets/images/logo.png">
+        Skample
+      </a>
+    </div>
+  </div>
+
+  <div class="ui main text container">
+  <h1 class="ui header">Skample</h1>
+	<svg id="drawing" width="960" height="500"></svg>
+  </div>
+
+</body>
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script> window.jQuery || document.write("<script src='static/node_modules/jquery/dist/jquery.min.js'><\/script>")</script>
+<script src="https://d3js.org/d3.v4.js"></script>
+<script> window.d3 || document.write("<script src='static/node_modules/d3/build/d3.min.js'><\/script>")</script>
+<script src="static/js/drawing.js"></script>
+</html>
