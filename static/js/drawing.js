@@ -1,4 +1,13 @@
 (function() {
+  d3.selection.prototype.moveToBack = function() {
+      return this.each(function() {
+          var firstChild = this.parentNode.firstChild;
+          if (firstChild) {
+              this.parentNode.insertBefore(this, firstChild);
+          }
+      });
+  };
+
   var render_line = d3.line()
     .curve(d3.curveBasis);
 
@@ -20,8 +29,7 @@
     .range(y.range());
 
   var histogram = d3.histogram()
-    .domain(x.domain())
-    .thresholds(x.ticks(200));
+    .domain(x.domain());
 
   var canvas = d3.select('#drawing')
     .call(d3.drag()
@@ -50,22 +58,17 @@
         dy = y1 - y0,
         last = d[d.length - 1];
 
-      if (dx * dx + dy * dy > 0.1) {
-        if (last[0] < x1) {
-          d.push([x0 = x1, y0 = y1]);
-          drawing_data.push([x.invert(x0), y.invert(y0)]);
-        }
-      } else {
-        d[d.length - 1] = [x1, y1];
-        drawing_data[drawing_data.length - 1] = [x.invert(x1), y.invert(y1)];
+      if (last[0] < x1) {
+        d.push([x0 = x1, y0 = y1]);
+        drawing_data.push([x.invert(x0), y.invert(y0)]);
       }
       active.attr('d', render_line);
     });
   }
 
-  function plot_hist(data) {
+  function plot_hist(data, bins) {
 	  canvas.selectAll('g.bar').remove();	
-    var bins = histogram(data);
+    var bins = histogram.thresholds(x.ticks(+$('#nbins').val()))(data);
 
     max_data = d3.max(drawing_data, function(d) { return d[1]; });
     y_bins.domain([0, d3.max(bins, function(d){ return d.length; }) / max_data]);
@@ -78,20 +81,15 @@
 
 		bar.append("rect")
 				.attr("x", 1)
-				.attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
+				.attr("width", x(bins[0].x1) - x(bins[0].x0) - 1.5)
 				.attr("height", function(d) { return height - y_bins(d.length); });
-
-		bar.append("text")
-				.attr("dy", ".75em")
-				.attr("y", 6)
-				.attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
-				.attr("text-anchor", "middle")
-				.text(function(d) { return d.length; });
+    bar.moveToBack();
   }
 
   function drag_ended() {
-    var samples = sample_pdf(drawing_data, 30000);
+    var samples = sample_pdf(drawing_data, +$('#nsamples').val());
     plot_hist(samples);
+    $("#samples").text(samples.join(",\n"))
   }
 
   function get_area(cur, prev) {
@@ -146,40 +144,44 @@
     return cdf;
   }
 
-function get_inv_cdf(cdf) {
-  function inv_cdf(y) {
-    var data, a, b, c;
-    if (y < 0) return -Infinity;
-    for (var j=0; j<cdf.length; j++) {
-      if (cdf[j].cdf > y) {
-        data = cdf[j];
-        a = data.a;
-        b = data.b - 2 * data.a * data.x_prev;
-        c = data.a * data.x_prev * data.x_prev - data.b * data.x_prev + data.c;
-        return (-b + Math.sqrt(b * b - 4 * a * (c - y))) / (2 * a);
-      }
-    }
-    return Infinity;
-  }
-  return inv_cdf;
-}
+  function get_inv_cdf(cdf) {
+    function inv_cdf(y) {
+      var data, a, b, c;
+      if (y < 0) return -Infinity;
+      for (var j=0; j<cdf.length; j++) {
+        if (cdf[j].cdf > y) {
+          data = cdf[j];
+          a = data.a;
+          b = data.b - 2 * data.a * data.x_prev;
+          c = data.a * data.x_prev * data.x_prev - data.b * data.x_prev + data.c;
 
-function sample_pdf(pdf, n) {
-  if (pdf.length === 0) return [];
-  var samples = [],
-    i;
-  if (pdf.length == 1) {
+          if (a === 0) {
+            return (y - c) / b;
+          }
+          return (-b + Math.sqrt(b * b - 4 * a * (c - y))) / (2 * a);
+        }
+      }
+      return Infinity;
+    }
+    return inv_cdf;
+  }
+
+  function sample_pdf(pdf, n) {
+    if (pdf.length === 0) return [];
+    var samples = [],
+      i;
+    if (pdf.length == 1) {
+      for (i=0; i<n; i++) {
+        samples.push(pdf[0][0]);
+      }
+      return samples;
+    }
+
+    var inv_cdf = get_inv_cdf(get_cdf(pdf));
     for (i=0; i<n; i++) {
-      samples.push(pdf[0][0]);
+      samples.push(inv_cdf(Math.random()));
     }
     return samples;
   }
-
-  var inv_cdf = get_inv_cdf(get_cdf(pdf));
-  for (i=0; i<n; i++) {
-    samples.push(inv_cdf(Math.random()));
-  }
-  return samples;
-}
 
 }).call(this);

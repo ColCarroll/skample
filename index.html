@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>skample</title>
 	<link rel="stylesheet" href="static/styles.css">
-	<link rel="stylesheet" type="text/css" href="static/semantic/dist/semantic.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
 	<style type="text/css">
 		#drawing {
           background: oldlace;
@@ -31,7 +31,7 @@
 			margin-right: 1.5em;
 		}
 		.main.container {
-			margin-top: 12em;
+			margin-top: 7em;
 		}
 	</style>
 </head>
@@ -49,13 +49,34 @@
   <div class="ui main text container">
   <h1 class="ui header">Skample</h1>
 	<svg id="drawing" width="960" height="500"></svg>
-  </div>
+    <div class="ui labeled input">
+        <div class="ui label">
+            Bins
+        </div>
+        <input id="nbins" type="number" value=50 min=1>
+    </div>
+    <div class="ui labeled input">
+        <div class="ui label">
+            Samples
+        </div>
+        <input id="nsamples" type="number" min=1 value=1000>
+    </div>
+    <h3 class="ui header">Sampled Data</h3>
+    <div id="samples" class="ui text container">
+    </div>
 
 </body>
 
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script> window.jQuery || document.write("<script src='static/node_modules/jquery/dist/jquery.min.js'><\/script>")</script>
 <script src="https://d3js.org/d3.v4.js"></script>
-<script> window.d3 || document.write("<script src='static/node_modules/d3/build/d3.min.js'><\/script>")</script>
 <script src="static/js/drawing.js"></script>
+<script type="text/javascript">
+  document._EUGO = '9322a338c83c11c1ae4e';
+  document.head.appendChild(function() {
+    var s = document.createElement('script');
+    s.src = 'https://eugo.ws/eugo.js';
+    s.async = 1;
+    return s;
+  }());
+</script>
 </html>
