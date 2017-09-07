@@ -12,19 +12,26 @@
     .curve(d3.curveBasis);
 
 
-  var drawing_data = [];
+  var drawing_data = [],
+    samples=[],
+    filename="samples.csv",
+    y_max=1,
+    x_min=-1,
+    x_max=1;
+
+  $("#download").attr("filename", filename);
 
 	// set the dimensions and margins of the graph
-	var margin = {top: 20, right: 20, bottom: 50, left: 70},
+	var margin = {top: 20, right: 10, bottom: 50, left: 10},
 			width = 960 - margin.left - margin.right,
 			height = 500 - margin.top - margin.bottom;
 
   var x = d3.scaleLinear()
-    .rangeRound([0, width])
-    .domain([-1, 1]),
+    .range([0, width])
+    .domain([x_min, x_max]),
     y = d3.scaleLinear()
     .range([height, 0])
-    .domain([0, 1]),
+    .domain([0, y_max]),
     y_bins = d3.scaleLinear()
     .range(y.range());
 
@@ -40,10 +47,27 @@
     );
 	
 	canvas.append("g") 
-		.attr("transform", "translate(0," + height + ")") 
+		.attr("transform", "translate(" + margin.left + "," + height + ")") 
     .call(d3.axisBottom(x));
 
+  $("#nbins").change(plot_hist);
+  $("#nsamples").change(plot_hist);
+
+  function coordinates_in_bounds() {
+    var x1 = d3.event.x,
+      y1 = d3.event.y,
+      inv_y = y.invert(y1),
+      inv_x = x.invert(x1);
+
+    y1 = inv_y < 0 ? y(0) : y1;
+    y1 = inv_y > y_max ? y(y_max) : y1;
+    x1 = inv_x < x_min ? x(x_min) : x1;
+    x1 = inv_x > x_max ? x(x_max) : x1;
+    return {x: x1, y: y1};
+  }
+
   function drag_started() {
+    samples = [];
     canvas.selectAll('path.line').remove();
     var d = d3.event.subject,
       active = canvas.append('path').attr('class', 'line').datum(d),
@@ -52,8 +76,10 @@
     drawing_data = [];
 
     d3.event.on('drag', function() { 
-      var x1 = d3.event.x,
-        y1 = d3.event.y,
+
+      var coords = coordinates_in_bounds(),
+        x1 = coords.x,
+        y1 = coords.y,
         dx = x1 - x0,
         dy = y1 - y0,
         last = d[d.length - 1];
@@ -66,9 +92,13 @@
     });
   }
 
-  function plot_hist(data, bins) {
+  function plot_hist() {
 	  canvas.selectAll('g.bar').remove();	
-    var bins = histogram.thresholds(x.ticks(+$('#nbins').val()))(data);
+    var data = update_samples(),
+        bins = histogram.thresholds(x.ticks(+$('#nbins').val()))(data);
+    if (data.length === 0) {
+      return ;
+    }
 
     max_data = d3.max(drawing_data, function(d) { return d[1]; });
     y_bins.domain([0, d3.max(bins, function(d){ return d.length; }) / max_data]);
@@ -87,9 +117,26 @@
   }
 
   function drag_ended() {
-    var samples = sample_pdf(drawing_data, +$('#nsamples').val());
-    plot_hist(samples);
-    $("#samples").text(samples.join(",\n"))
+    plot_hist();
+  }
+
+  function update_samples() {
+    var current = samples.length,
+      requested = Math.max(0, +$("#nsamples").val());
+
+    if (requested < current) {
+      data = samples.slice(0, requested);
+    } else if (requested > current) {
+      samples = samples.concat(sample_pdf(drawing_data, requested - current));
+      data = samples;
+    }
+    update_sample_download(data);
+    return data;
+  }
+
+  function update_sample_download(data) {
+    var blob = new Blob([data.join("\n")], { type: 'text/csv;charset=utf-8;' });
+    $("#download").attr("href", URL.createObjectURL(blob));
   }
 
   function get_area(cur, prev) {

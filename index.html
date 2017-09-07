@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>skample</title>
-	<link rel="stylesheet" href="static/styles.css">
+	<title>skample!</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
 	<style type="text/css">
 		#drawing {
-          background: oldlace;
+          background: #fdf9f0;
         }
 		.bar rect {
 		  fill: steelblue;
@@ -15,7 +14,7 @@
         .line {
           fill: none;
           stroke: #000;
-          stroke-width: 5px;
+          stroke-width: 4px;
           stroke-linejoin: round;
           stroke-linecap: round;
         }
@@ -23,31 +22,17 @@
 		  fill: #fff;
 		  font: 10px sans-serif;
 		}
-
-		body {
-			background-color: #FFFFFF;
-		}
-		.ui.menu .item img.logo {
-			margin-right: 1.5em;
-		}
-		.main.container {
-			margin-top: 7em;
-		}
 	</style>
 </head>
 
 <body>
-  <div class="ui fixed inverted menu">
-    <div class="ui container">
-      <a href="#" class="header item">
-        <img class="logo" src="static/assets/images/logo.png">
-        Skample
-      </a>
-    </div>
-  </div>
-
   <div class="ui main text container">
-  <h1 class="ui header">Skample</h1>
+      <h1 class="ui header">
+          <div class="content">Skample!</div>
+          <div class="sub header" >
+              [<a href="https://github.com/ColCarroll/skample" target="_blank">source</a>]
+          </div>
+      </h1>
 	<svg id="drawing" width="960" height="500"></svg>
     <div class="ui labeled input">
         <div class="ui label">
@@ -61,22 +46,59 @@
         </div>
         <input id="nsamples" type="number" min=1 value=1000>
     </div>
-    <h3 class="ui header">Sampled Data</h3>
-    <div id="samples" class="ui text container">
+    <a id="download" class="ui button" target="_blank">
+        Download
+    </a>
+    <div class="ui raised padded text container segment">
+      <h2 class="ui header">What is it?</h2>
+      <p>Sketch anywhere in the box to create a 
+      <a href="https://en.wikipedia.org/wiki/Probability_density_function" target="_blank">
+          continuous probability density function
+      </a>, and then to sample points from that density function.  Clicking on the "Download"
+      button will get you a CSV of those points (one column of unquoted floats, no header).
+
+      <h2 class="ui header">Can I change the numbers?</h2>
+      <p>Sure! This is pretty performant, and will update as you change the numbers.  If you set the
+      number of samples to 1, then click in the box and hold the "up" arrow, you can watch the samples get
+      get drawn from your distribution!  Sampling up to 1,000,000 points on my laptop is pretty instantaneous.
+
+      <h2 class="ui header">How did you do it?</h2>
+      <p>Everything is done exactly, and it is all javascript, so it is running in your browser.  Crazy big
+      numbers will hurt only your computer!  Probably 1 billion is crazy big, but it is a free country, so 
+      I'm not stopping you.
+      <p> More rigorously, when you draw a line, that turns into a list of <i>(x, y)</i> tuples, which is
+      a piecewise-linear pdf.  I integrate that exactly using the 
+      <a href="https://en.wikipedia.org/wiki/Trapezoidal_rule" target="_blank">trapezoidal rule</a>, but in this
+      case <i>is the exact integral</i>, to get the 
+      <a href="https://en.wikipedia.org/wiki/Cumulative_distribution_function">cdf</a>, which will be piecewise
+      quadratic.  Then I work out how to invert this cdf.  You can see the math in 
+      <a href="https://github.com/ColCarroll/skample/blob/master/static/js/drawing.js" target="_blank">the repo</a>, 
+      or much more clearly written out in 
+      <a href="https://gist.github.com/ColCarroll/2cb6c7da86827b5ba7a3885d03ac48e7" target="_blank">my Python notes</a>.
+
+      <p>Sampling is then done by generating a random uniform number between 0 and 1, and passing that number
+      through the inverted cdf.  All the samples you have generated for a sketch are stored in state, so 
+      changing the number of samples from <i>n</i> to <i>n + 1</i> is <i>O(1)</i>.
+
+      <h2 class="ui header">How can I sample from more complicated distributions?</h2>
+      <p>Check out <a href="https://github.com/pymc-devs/pymc3" target="_blank">PyMC3</a> if you like Python!
+
+      <h2 class="ui header">Something is terrible!</h2>
+      <p><a href="https://github.com/ColCarroll/skample" target="_blank">Issues and pull requests welcome!</a>
+
+      <h2 class="ui header">Who are you? Why would you do this?</h2>
+      <p>I'm <a href="https://colindcarroll.com/" target="_blank">Colin</a>! I saw an interesting 
+      <a href="https://twitter.com/jtrnyc/status/902555145371865090" target="_blank">tweet</a> asking
+      for such an app.  I have been working on an interactive UI for PyMC3 recently, and started adding this
+      in before realizing you really do not need such a big hammer for this nail.  I do wonder whether 
+      rejection sampling would be more efficient for this task.
+
     </div>
 
 </body>
 
+
 <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script src="https://d3js.org/d3.v4.js"></script>
 <script src="static/js/drawing.js"></script>
-<script type="text/javascript">
-  document._EUGO = '9322a338c83c11c1ae4e';
-  document.head.appendChild(function() {
-    var s = document.createElement('script');
-    s.src = 'https://eugo.ws/eugo.js';
-    s.async = 1;
-    return s;
-  }());
-</script>
 </html>
